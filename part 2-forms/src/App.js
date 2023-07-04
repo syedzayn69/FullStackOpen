@@ -3,29 +3,29 @@ import Note from './components/Note'
 
 const App = (props) => {
   const [notes, setNotes] = useState(props.notes)
-  const [newNote, setNewNote] = useState('a new note...')
+  const [newNote, setNewNote] = useState('')
   const [showAll, setShowAll] = useState(true)
 
-  const handleNoteChange = (event) => {
-    console.log(event.target.value)
-    setNewNote(event.target.value)
-  }
+  const addNote = (e) => {
+    e.preventDefault()
 
-  const addNote = (event) => {
-    event.preventDefault()
-    const noteObject = {
+    const newObj = {
       content: newNote,
       important: Math.random() < 0.5,
-      id: notes.length + 1,
+      id : notes.length + 1
     }
-  
-    setNotes(notes.concat(noteObject))
+    
+    setNotes(notes.concat(newObj))
     setNewNote('')
   }
+
+  const changeFunc = (e) => {
+    setNewNote(e.target.value)
+  }
   
-  const notesToShow = showAll
-    ? notes
-    : notes.filter(note => note.important === true)
+  const notesToShow = showAll 
+  ? notes 
+  : notes.filter(elem => elem.important === true)
 
   return (
     <div>
@@ -42,7 +42,7 @@ const App = (props) => {
       </ul>
 
       <form onSubmit={addNote}>
-        <input value={newNote} onChange={handleNoteChange}/>
+        <input value={newNote} onChange={changeFunc}/>
         <button type="submit">save</button>
       </form>   
     </div>
