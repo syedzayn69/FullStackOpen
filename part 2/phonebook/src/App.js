@@ -1,5 +1,5 @@
-import { useState } from 'react'
-
+import axios from 'axios'
+import { useState,useEffect } from 'react'
 // COMPONENTS
 const Filter = ({filterFn}) => {
   return(
@@ -32,6 +32,13 @@ const App = () => {
   const [filteredWords, setfilterWords] = useState('')
   let isFound = false
 
+  const fetchData = () => {
+    axios.get('http://localhost:3001/persons')
+    .then(response =>{
+      setPersons(response.data)
+    })
+  }
+  useEffect(fetchData,[])
 
   const onSubmitFn = (e) => {
     e.preventDefault()
