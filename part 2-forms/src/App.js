@@ -1,10 +1,21 @@
-import { useState } from 'react'
+import { useState,useEffect } from 'react'
+import axios from 'axios'
 import Note from './components/Note'
+import noteServicesVar from './services/notes'
 
-const App = (props) => {
-  const [notes, setNotes] = useState(props.notes)
+const App = () => {
+  const [notes, setNotes] = useState([])
   const [newNote, setNewNote] = useState('')
   const [showAll, setShowAll] = useState(true)
+
+  const dataFetch = () => {
+    noteServicesVar
+      .getAll()
+        .then(returnedValue => {
+          setNotes(returnedValue)
+        })
+  }
+  useEffect(dataFetch,[])
 
   const addNote = (e) => {
     e.preventDefault()
@@ -15,14 +26,37 @@ const App = (props) => {
       id : notes.length + 1
     }
     
-    setNotes(notes.concat(newObj))
-    setNewNote('')
+    noteServicesVar
+      .create(newObj)
+        .then(returnedValue => {
+          setNotes(notes.concat(returnedValue))
+          setNewNote('')
+        })
+  }
+
+  const toggleImportance = (id) => {
+    console.log(`importance of ${id} needs to be toggled`)
+    
+    const note = notes.find(elem => elem.id === id)
+    let changedNotes = {...note, important: !note.important}
+
+    noteServicesVar
+    .update(id,changedNotes)
+      .then(returnedValue => {
+        setNotes(notes.map(elem => elem.id !== id ? elem : returnedValue))
+      })
+      .catch(error => {
+        alert(`the note ${note.content} was already deleted from server`)
+        setNotes(notes.filter(elem => elem.id !== id))
+      })
+
+
   }
 
   const changeFunc = (e) => {
     setNewNote(e.target.value)
   }
-  
+
   const notesToShow = showAll 
   ? notes 
   : notes.filter(elem => elem.important === true)
@@ -37,7 +71,7 @@ const App = (props) => {
       </div>
       <ul>
         {notesToShow.map(note => 
-          <Note key={note.id} note={note} />
+          <Note key={note.id} note={note} toggleImportance={() => toggleImportance(note.id)} />
         )}
       </ul>
 
