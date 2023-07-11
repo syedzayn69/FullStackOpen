@@ -1,5 +1,7 @@
 import axios from 'axios'
 import { useState,useEffect } from 'react'
+import servicesVar from './services/services.js'
+
 // COMPONENTS
 const Filter = ({filterFn}) => {
   return(
@@ -33,9 +35,10 @@ const App = () => {
   let isFound = false
 
   const fetchData = () => {
-    axios.get('http://localhost:3001/persons')
-    .then(response =>{
-      setPersons(response.data)
+    servicesVar
+    .fetch()
+    .then(returnedValue =>{
+      setPersons(returnedValue)
     })
   }
   useEffect(fetchData,[])
@@ -43,58 +46,94 @@ const App = () => {
   const onSubmitFn = (e) => {
     e.preventDefault()
     isFound = false
+
     const newObj = {
       name : newName,
       number : newNum
     }
 
+    // REPLACE OLD CONTACTS WITH NEW
+    {
+      persons.map(elem => {
+        if(elem.name === newObj.name){
+          if(window.confirm('Are you sure you wanna rewrite this number')){
+            servicesVar
+            .updateContact(elem.id,newNum)
+          }
+        }
+      })
+      fetchData()
+    }
+    setPersons(persons)
+    setNewName('')
+    setNewNum('')
+
     // PREVENT USER FORM ENTERING THE SAME NAME TWICE
-    {persons.map(elem => {
-      if(elem.name === newObj.name){
-        alert(`${newName} already added to phonebook!`)
-        isFound = true
+    {
+      persons.map(elem => {
+        if(newObj.name === elem.name){
+          alert(`${newName} already added to phonebook!`)
+          isFound = true
+        }
+      })
+      if(isFound === true) return
+    }
+    
+    // ADD DATA TO DATABASE & RENDERING PAGE
+    servicesVar
+    .addData(newObj)
+    .then(returnedValue => {
+      setPersons(persons.concat(returnedValue))
+      setNewName('')
+      setNewNum('')
+    })
+  }
+
+  
+  const deleteFn = (id) => {
+    console.log(id)
+    if(window.confirm('Are you sure you want to delete this?')){
+      servicesVar
+      .deleteData(id)
+      
+      setPersons(persons.filter(elem => elem.id !== id))
+      fetchData() // solution for data not rendering correctly sometimes after deletion
+    }
+  }
+
+  const changeFnName = (e) => {
+    setNewName(e.target.value)
+  }
+  const changeFnNum = (e) => {
+    setNewNum(e.target.value)
+  }
+  const filterFn = (e) => {
+    let field = e.target.value
+    setfilterWords(field)
+
+    if(field !== '') setIsEmpty(false)
+    else setIsEmpty(true)
+  }
+
+  const filterListFn = () => {
+    let regex = new RegExp(`${filteredWords}`,'gi')
+    
+    return persons.map((elem,i) => {
+      if(elem.name.match(regex) !== null){
+        return(
+          <div key={i}>{elem.name} {elem.number} <button key={i} onClick={() => deleteFn(persons[i].id)}>Delete</button> </div>
+        )
       }
     })
-    if(isFound === true) return
-    }
-
-  setPersons(persons.concat(newObj))
-  setNewName('')
-  setNewNum('')
-}
-
-
-const changeFnName = (e) => {
-  setNewName(e.target.value)
-}
-const changeFnNum = (e) => {
-  setNewNum(e.target.value)
-}
-const filterFn = (e) => {
-  let field = e.target.value
-  setfilterWords(field)
-
-  if(field !== '') setIsEmpty(false)
-  else setIsEmpty(true)
-}
-
-const filterListFn = () => {
-  let regex = new RegExp(`${filteredWords}`,'gi')
-  
-  return persons.map((elem,i) => {
-    if(elem.name.match(regex) !== null){
-      return(
-        <div key={i}>{elem.name} {elem.number}</div>
-      )
-    }
-  })
-}
-const displayList = () => {
-  return (
-    persons.map((elem,i) => {
-      return (<div key = {i}>{elem.name} {elem.number}</div>)
-    })
-  )
+  }
+  const displayList = () => {
+    return (
+      persons.map((elem,i) => {
+        return (
+          <div key={i}>{elem.name} {elem.number} <button key={i}  onClick={() => deleteFn(persons[i].id)}>Delete</button> </div>
+        )
+      })
+    )
 }
 
 return (
