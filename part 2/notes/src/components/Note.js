@@ -1,10 +1,13 @@
-const Notes = ({note}) => {
-    return (
-      note.map(elem => {
-        return(
-          <li key = {elem.id}>{elem.content}</li>
-        )
-      })
-    )
-  }
-  export default Notes
+const Note = ({ note, toggleImportance  }) => {
+  const label = note.important 
+  ? 'make not important'
+  : 'make important'
+  return (
+    <li className="note">
+      {note.content}
+      <button onClick={toggleImportance}>{label}</button>
+    </li>
+  )
+}
+
+export default Note
