@@ -2,13 +2,6 @@ import axios from 'axios'
 import services from './services/services';
 import { useState,useEffect } from 'react';
 
-// const FilterList = ({displayFilteredList}) => {
-//   return(
-//     <div>
-      
-//     </div>
-//   )
-// }
 function App() {
   const [allCountries,setAllCountries] = useState([])
   const [inputField,setInputField] = useState('')
