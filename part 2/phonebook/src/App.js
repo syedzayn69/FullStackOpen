@@ -9,20 +9,53 @@ const Filter = ({filterFn}) => {
     </>
   )
 }
-const PersonForm = ({onSubmitFn,newName,changeFnName,newNum,changeFnNum}) => {
+const PersonForm = ({onSubmitFn,newName,changeNameFn,newNum,changeNumberFn}) => {
   return(
   <form onSubmit={onSubmitFn}>
     <div>
-      name: <input value = {newName} onChange={changeFnName} required/><br />
-      number: <input value = {newNum} onChange={changeFnNum} required/><br />
+      name: <input value = {newName} onChange={changeNameFn} required/><br />
+      number: <input value = {newNum} onChange={changeNumberFn} required/><br />
     </div>
     <div>
       <button type="submit">add</button>
     </div>
   </form >)
 }
-const Person = ({IsEmpty,displayList,filterListFn}) => {
-  return IsEmpty ? displayList() : filterListFn() 
+const Person = ({IsEmpty,displayListFn,filterListFn}) => {
+  return IsEmpty ? displayListFn() : filterListFn() 
+}
+const Notification = ({message}) => {
+  const taskCompletedStyles = {
+    color : 'green',
+    backgroundColor : 'silver',
+    padding : '10px',
+    fontSize : '30px',
+    border : '3px solid green',
+    margin : '10px 0',
+    borderRadius: '10px'
+  }
+  const taskFailedStyles = {
+    color : 'red',
+    backgroundColor : 'silver',
+    padding : '10px',
+    fontSize : '30px',
+    border : '3px solid red',
+    margin : '10px 0',
+    borderRadius: '10px'
+  }
+  const regex = new RegExp('deleted','gi')
+
+  if(message === '') return null
+  else if (regex.test(message)){
+    return(
+      <div style={taskFailedStyles} className='submission'>{message}</div>
+    )
+  }
+  else{
+    return(
+      <div style={taskCompletedStyles} className='submission'>{message}</div>
+    )
+  }
 }
 
 const App = () => {
@@ -31,6 +64,8 @@ const App = () => {
   const [newNum, setNewNum] = useState('')
   const [IsEmpty, setIsEmpty] = useState(true)
   const [filteredWords, setfilterWords] = useState('')
+  const [notification,setNotification] = useState('')
+
   let isFound = false
 
   const fetchData = () => {
@@ -57,7 +92,16 @@ const App = () => {
         if(elem.name === newObj.name){
           if(window.confirm('Are you sure you wanna rewrite this number')){
             servicesVar
-            .updateContact(elem.id,newNum)
+              .updateContact(elem.id,newNum)
+              .catch(error => {
+                setNotification(`${newName} is already deleted from the server.`)
+                setTimeout(() => setNotification('') ,5000)
+                return
+              })
+
+            //NOTIFY THE SUBMISSION
+            setNotification(`${newName} contact updated.`)
+            setTimeout(() => setNotification('') ,3000)
           }
         }
       })
@@ -79,18 +123,24 @@ const App = () => {
     }
     
     // ADD DATA TO DATABASE & RENDERING PAGE
+    {
     servicesVar
-    .addData(newObj)
-    .then(returnedValue => {
-      setPersons(persons.concat(returnedValue))
-      setNewName('')
-      setNewNum('')
-    })
+      .addData(newObj)
+      .then(returnedValue => {
+        setPersons(persons.concat(returnedValue))
+        setNewName('')
+        setNewNum('')
+      })
+    }
+
+    //NOTIFY THE SUBMISSION
+    {
+      setNotification(`${newName} is added to phonebook`)
+      setTimeout(() => setNotification('') ,3000)
+    }
   }
 
-  
   const deleteFn = (id) => {
-    console.log(id)
     if(window.confirm('Are you sure you want to delete this?')){
       servicesVar
       .deleteData(id)
@@ -100,12 +150,14 @@ const App = () => {
     }
   }
 
-  const changeFnName = (e) => {
+  const changeNameFn = (e) => {
     setNewName(e.target.value)
   }
-  const changeFnNum = (e) => {
+
+  const changeNumberFn = (e) => {
     setNewNum(e.target.value)
   }
+
   const filterFn = (e) => {
     let field = e.target.value
     setfilterWords(field)
@@ -115,7 +167,7 @@ const App = () => {
   }
 
   const filterListFn = () => {
-    let regex = new RegExp(`${filteredWords}`,'gi')
+    let regex = new RegExp(`\\${filteredWords}`,'gi')
     
     return persons.map((elem,i) => {
       if(elem.name.match(regex) !== null){
@@ -125,7 +177,8 @@ const App = () => {
       }
     })
   }
-  const displayList = () => {
+
+  const displayListFn = () => {
     return (
       persons.map((elem,i) => {
         return (
@@ -133,16 +186,17 @@ const App = () => {
         )
       })
     )
-}
+  }
 
 return (
   <div>
       <h2>Phonebook</h2>
+      <Notification message={notification} />
       <Filter  filterFn={filterFn}/>
       <h3>add a new</h3>
-      <PersonForm  onSubmitFn={onSubmitFn} newName={newName} changeFnName={changeFnName} newNum={newNum} changeFnNum={changeFnNum}/>
+      <PersonForm  onSubmitFn={onSubmitFn} newName={newName} changeNameFn={changeNameFn} newNum={newNum} changeNumberFn={changeNumberFn}/>
       <h3>Numbers</h3>
-      <Person IsEmpty={IsEmpty} displayList={displayList} filterListFn={filterListFn}/>
+      <Person IsEmpty={IsEmpty} displayListFn={displayListFn} filterListFn={filterListFn}/>
     </div>
   )
 }

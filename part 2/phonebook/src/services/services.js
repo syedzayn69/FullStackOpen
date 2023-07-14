@@ -24,8 +24,10 @@ const deleteData = (id)  => {
 }
 
 const updateContact = (id,number) => {
-    axios
-    .patch(`${url}/${id}`,{number: `${number}`})
+    return(
+        axios
+        .patch(`${url}/${id}`,{number: `${number}`})
+    )
 }
 
 export default { fetch, addData, deleteData, updateContact }
