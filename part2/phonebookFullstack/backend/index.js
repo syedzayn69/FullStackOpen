@@ -1,11 +1,10 @@
-const { error } = require('console')
 const express = require('express')
 const app = express()
-const morgan  = require('morgan')
-const { request } = require('http')
-const cors = require('cors')
-app.use(cors)
+app.use(express.json())
 app.use(express.static('build'))
+const morgan  = require('morgan')
+const cors = require('cors')
+app.use(cors())
 
 let contacts = [
     { 
@@ -64,7 +63,6 @@ morgan.token('content',function(req,res) {
 })
 ////
 
-app.use(express.json())
 app.post('/api/persons',morgan(`:method :url :status :res[content-length] - :response-time ms :content`),(request,response) => {
     // console.log(request.headers)  // TO CHECK HEADER TYPE
     const body = request.body
