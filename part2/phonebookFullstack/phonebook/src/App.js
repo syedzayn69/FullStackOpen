@@ -92,7 +92,7 @@ const App = () => {
         if(elem.name === newObj.name){
           if(window.confirm('Are you sure you wanna rewrite this number')){
             servicesVar
-              .updateContact(elem.id,newNum)
+              .updateContact(elem.id, newName, newNum)
               .catch(error => {
                 setNotification(`${newName} is already deleted from the server.`)
                 setTimeout(() => setNotification('') ,5000)
@@ -102,10 +102,10 @@ const App = () => {
             //NOTIFY THE SUBMISSION
             setNotification(`${newName} contact updated.`)
             setTimeout(() => setNotification('') ,3000)
+            setTimeout(() => fetchData(),500) // to refresh results on screen after contact
           }
         }
       })
-      fetchData()
     }
     setPersons(persons)
     setNewName('')

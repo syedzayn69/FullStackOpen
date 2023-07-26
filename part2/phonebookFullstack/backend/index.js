@@ -1,10 +1,14 @@
 const express = require('express')
 const app = express()
-app.use(express.json())
-app.use(express.static('build'))
 const morgan  = require('morgan')
 const cors = require('cors')
+
+app.use(express.json())
+app.use(express.static('build'))
 app.use(cors())
+require('dotenv').config()
+
+const People = require('./model/phonebook')
 
 let contacts = [
     { 
@@ -33,28 +37,34 @@ app.get('/',(request,response) => {
     response.send('<h1>Hello World</h1>')
 })
 
-app.get('/api/persons/:id',(request,response)=> {
-    const id = Number(request.params.id)
-    const contact = contacts.find(elem => elem.id === id)
-    if(contact){
-        response.json(contact)
-    }else{
-        response.status(404).end()
-    }
+app.get('/api/persons/:id',(request,response,next)=> {
+    People.findById(request.params.id)
+    .then(res => {
+        if(res){
+            response.json(res)
+        }else{
+            response.status(404).end()
+        }
+    })
+    .catch(error => next(error))
 })
 
 app.get('/info',(request,response)=> {
-    response.send(`Phonebook has onfo for ${contacts.length} people </br> ${Date()}`)
+    response.send(`Phonebook has onfo for ${People.length} people </br> ${Date()}`)
 })
 
 app.get('/api/persons',(request,response)=> {
-    response.json(contacts)
+    People.find({}).then(res => {
+        response.json(res)
+    })
 })
 
-app.delete('/api/persons/:id',(request,response) => {
-    const id = Number(request.params.id)
-    contacts = contacts.filter(elem => elem.id !== id)
+app.delete('/api/persons/:id',(request,response,next) => {
+   People.findByIdAndDelete(request.params.id)
+   .then(results => {    
     response.status(204).end()
+   })
+   .catch(error => next(error))
 })
 
 // DEFINING CUSTOM TOKENS IN MORGAN
@@ -66,12 +76,10 @@ morgan.token('content',function(req,res) {
 app.post('/api/persons',morgan(`:method :url :status :res[content-length] - :response-time ms :content`),(request,response) => {
     // console.log(request.headers)  // TO CHECK HEADER TYPE
     const body = request.body
-    const id = Math.round(Math.random() * 10000)
-    const newContact = {
+    const newContact = new People ({
         name : body.name,
         number : body.number,
-        id : id
-    }
+    })
     // CHECK CONDITIONS 
     {
         if(contacts.find(elem => body.name === elem.name)){
@@ -87,8 +95,28 @@ app.post('/api/persons',morgan(`:method :url :status :res[content-length] - :res
                         error : "Empty field not acceptable as Number"
                     })}    
     }
-    contacts = contacts.concat(newContact)
-    response.json(newContact)
+    newContact.save().then(result => {
+        console.log('contact saved!')
+        response.json(result)
+    })
+})
+app.put('/api/persons/:id', (request, response, next) => {
+    const body = request.body
+
+    const person = {
+        name : body.name,
+        number : body.number
+    }
+    People.findByIdAndUpdate(request.params.id, person, {new: true})
+    .then(results => {
+        if(results){
+            response.json(person)
+        }else{
+            response.status(400).end()
+        }
+    })
+    .catch(error => next(error))
+
 })
 
 const unknownEndPoint = (request,response) => {
@@ -96,7 +124,16 @@ const unknownEndPoint = (request,response) => {
 }
 app.use(unknownEndPoint)
 
-const PORT = process.env.PORT || 3001
+const errorHandler = (err, req, res, next) => {
+    console.error(err.message)
+    if(err.name === 'CastError'){
+        res.status(400).end()
+    }else{
+        next(err)
+    }
+}
+app.use(errorHandler)
+const PORT = process.env.PORT
 app.listen(PORT,() => {
     console.log(`Server is running on port ${PORT}`)
 })

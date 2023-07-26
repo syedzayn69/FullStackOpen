@@ -23,10 +23,14 @@ const deleteData = (id)  => {
     })
 }
 
-const updateContact = (id,number) => {
+const updateContact = (id, name, number) => {
+    const newObj = {
+        name : name,
+        number : number
+    }
     return(
         axios
-        .patch(`${url}/${id}`,{number: `${number}`})
+        .put(`${url}/${id}`,newObj)
     )
 }
 
