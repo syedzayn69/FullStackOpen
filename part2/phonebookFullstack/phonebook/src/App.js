@@ -5,7 +5,7 @@ import servicesVar from './services/services.js'
 const Filter = ({filterFn}) => {
   return(
     <>
-      filter shown with <input onChange={filterFn}/>
+      filter shown with: <input onChange={filterFn}/>
     </>
   )
 }
@@ -43,10 +43,11 @@ const Notification = ({message}) => {
     margin : '10px 0',
     borderRadius: '10px'
   }
-  const regex = new RegExp('deleted','gi')
+  const delRegex = new RegExp('deleted','gi')
+  const validationRegex = new RegExp('validation','gi')
 
   if(message === '') return null
-  else if (regex.test(message)){
+  else if (delRegex.test(message) || validationRegex.test(message)){
     return(
       <div style={taskFailedStyles} className='submission'>{message}</div>
     )
@@ -94,7 +95,7 @@ const App = () => {
             servicesVar
               .updateContact(elem.id, newName, newNum)
               .catch(error => {
-                setNotification(`${newName} is already deleted from the server.`)
+                setNotification(error.response.data.error)
                 setTimeout(() => setNotification('') ,5000)
                 return
               })
@@ -115,7 +116,6 @@ const App = () => {
     {
       persons.map(elem => {
         if(newObj.name === elem.name){
-          alert(`${newName} already added to phonebook!`)
           isFound = true
         }
       })
@@ -128,15 +128,20 @@ const App = () => {
       .addData(newObj)
       .then(returnedValue => {
         setPersons(persons.concat(returnedValue))
+        //NOTIFY THE SUBMISSION
+        {
+          setNotification(`${newName} is added to phonebook`)
+          setTimeout(() => setNotification('') ,3000)
+        }
         setNewName('')
         setNewNum('')
       })
-    }
-
-    //NOTIFY THE SUBMISSION
-    {
-      setNotification(`${newName} is added to phonebook`)
-      setTimeout(() => setNotification('') ,3000)
+      .catch(error => {
+        console.log(error)
+        setNotification(error.response.data.error)
+        setTimeout(() => setNotification('') ,3000)
+        return
+      })
     }
   }
 
@@ -146,7 +151,7 @@ const App = () => {
       .deleteData(id)
       
       setPersons(persons.filter(elem => elem.id !== id))
-      fetchData() // solution for data not rendering correctly sometimes after deletion
+      fetchData() // solution for data not rendering correctly sometimes, after deletion
     }
   }
 

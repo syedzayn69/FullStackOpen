@@ -52,10 +52,8 @@ const App = () => {
         setTimeout(() => setErrorMsg(null),5000)
         setNotes(notes.filter(elem => elem.id !== id))
       })
-
-
-  }
-
+    }
+    
   const changeFunc = (e) => {
     setNewNote(e.target.value)
   }
