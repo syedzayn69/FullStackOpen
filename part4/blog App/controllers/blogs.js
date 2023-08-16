@@ -1,21 +1,31 @@
 const { model } = require("mongoose");
-
+const jwt = require("jsonwebtoken");
 const blogsRouter = require("express").Router();
 const Blog = require("../models/blog");
 const User = require("../models/user");
 const { request, response } = require("../app");
 
 blogsRouter.get("/", async (request, response) => {
-  const allBlogs = await Blog.find({}).populate("user",{username: 1,name: 1});
+  const allBlogs = await Blog.find({}).populate("user", {
+    username: 1,
+    name: 1,
+  });
   response.json(allBlogs);
 });
+
+const getTokenFrom = (request) => {
+  const authorization = request.get("authorization");
+  if (authorization && authorization.startsWith("Bearer ")) {
+    return authorization.replace("Bearer ", "");
+  }
+  return null;
+};
 
 blogsRouter.post("/", async (request, response) => {
   const { title, author, url, likes } = request.body;
 
-  const allUser = await User.find({});
-  const userId = allUser[0]._id.toString();
-  const user = await User.findById(userId);
+  const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET);
+  const user = await User.findById(decodedToken.id);
 
   const blog = new Blog({
     title,
