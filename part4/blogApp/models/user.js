@@ -10,7 +10,6 @@ const BlogUserSchema = new mongoose.Schema({
   },
   name: {
     type: String,
-    required: true,
     minLength: 3,
   },
   passwordHash: String,

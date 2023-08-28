@@ -1,9 +1,7 @@
-const { model } = require("mongoose");
 const jwt = require("jsonwebtoken");
 const blogsRouter = require("express").Router();
 const Blog = require("../models/blog");
 const User = require("../models/user");
-const { request, response } = require("../app");
 
 blogsRouter.get("/", async (request, response) => {
   const allBlogs = await Blog.find({}).populate("user", {
@@ -26,6 +24,7 @@ blogsRouter.post("/", async (request, response) => {
 
   const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET);
   const user = await User.findById(decodedToken.id);
+  if(user === null) response.status(401).json({error: "Unauthorized access!"})
 
   const blog = new Blog({
     title,

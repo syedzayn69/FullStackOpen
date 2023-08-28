@@ -7,6 +7,11 @@ userRouter.get("/", async (request, response) => {
   response.json(allBlogs);
 });
 
+userRouter.get("/:id", async (request, response) => {
+  const returnedBlog = await User.findById(request.params.id)
+  response.json(returnedBlog)
+})
+
 userRouter.post("/", async (request, response) => {
   const { username, name, password } = request.body;
   if (password.length < 3) {
