@@ -1,5 +1,5 @@
 # FullStackOpen
-All assigmnents are divided into sub directories(parts)
+All assignments are divided into sub directories(parts)
 
 Phonebook link:
 https://muddy-river-378.fly.dev/
